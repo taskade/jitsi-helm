@@ -48,6 +48,12 @@ spec:
             {{- toYaml .Values.jvb.securityContext | nindent 12 }}
           image: "{{ .Values.jvb.image.repository }}:{{ default .Chart.AppVersion .Values.jvb.image.tag }}"
           imagePullPolicy: {{ pluck "pullPolicy" .Values.jvb.image .Values.image | first }}
+          command: [
+            "bash",
+            "-c",
+            "echo $'org.jitsi.videobridge.rest.jetty.cors.allowedOrigins=localhost:8080,call.taskade.dev' >> /defaults/sip-communicator.properties && \
+              /init"
+            ]
           envFrom:
           - secretRef:
               name: {{ include "call-nested" (list . "prosody" "prosody.fullname") }}-jvb
@@ -102,6 +108,9 @@ spec:
               containerPort: 9090
               protocol: TCP
           {{- end }}
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
           {{- with .Values.jvb.livenessProbe }}
           livenessProbe:
           {{- toYaml . | nindent 12 }}
@@ -116,6 +125,19 @@ spec:
           volumeMounts:
           {{- toYaml . | nindent 10 }}
           {{- end }}
+        - name: httpd
+          image: httpd:2.4.43-alpine
+          ports:
+            - name: httpd
+              containerPort: 80
+              hostPort: 30080
+              protocol: TCP
+        - name: exporter
+          image: systemli/prometheus-jitsi-meet-exporter:1.1.5
+          args: ["-videobridge-url", "http://localhost:8080/colibri/stats"]
+          ports:
+            - name: metrics
+              containerPort: 9888
 
         {{- if .Values.jvb.metrics.enabled }}
         - name: metrics

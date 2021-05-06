@@ -21,6 +21,19 @@ spec:
       {{- end }}
       protocol: UDP
       name: rtp-udp
+    {{- if and .Values.jvb.enableTCP }}
+    - port: {{ .Values.jvb.TCPPort }}
+      {{- if eq .Values.jvb.service.type "NodePort" }}
+      nodePort: {{ .Values.jvb.TCPPort }}
+      {{- end }}
+      protocol: TCP
+      name: rtp-tcp
+    - port: 80
+      targetPort: httpd
+      nodePort: 30080
+      protocol: TCP
+      name: httpd-tcp
+    {{- end }}
   {{- with .Values.jvb.service.externalIPs }}
   externalIPs:
   {{ toYaml . | indent 2 | trim }}

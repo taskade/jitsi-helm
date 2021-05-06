@@ -39,6 +39,27 @@ spec:
             {{- toYaml .Values.web.securityContext | nindent 12 }}
           image: "{{ .Values.web.image.repository }}:{{ default .Chart.AppVersion .Values.web.image.tag }}"
           imagePullPolicy: {{ pluck "pullPolicy" .Values.web.image .Values.image | first }}
+          command: ["bash"]
+          args:
+            - -c
+            - |-
+              apt-get update &&
+              apt-get install -y curl &&
+              curl https://i.imgur.com/UtxfXcd.png -o /usr/share/jitsi-meet/images/watermark.png &&
+              curl https://taskade-files.s3.amazonaws.com/jitsi/favicon.ico -o /usr/share/jitsi-meet/images/favicon.ico &&
+              sed -i ':a;N;$!ba;s/location = \/http-bind {\n/location = \/http-bind {\n  set $cors \"\";\n  if ($http_origin ~* (\\.taskade\\.com|\\.taskade\\.dev|localhost:8080)) {\n      set $cors \"true\";\n  }\n\n  if ($cors = \"true\") {\n    add_header Access-Control-Allow-Origin \"$http_origin\";\n    add_header Access-Control-Allow-Methods "GET, POST, OPTIONS, DELETE, PUT";\n    add_header Access-Control-Allow-Credentials "true";\n    add_header Access-Control-Allow-Headers "User-Agent,Keep-Alive,Content-Type";\n  }\n/gi' /defaults/meet.conf &&
+              sed -i 's/SHOW_WATERMARK_FOR_GUESTS: true/SHOW_WATERMARK_FOR_GUESTS: false/' /defaults/interface_config.js &&
+              sed -i 's/SHOW_JITSI_WATERMARK: true/SHOW_JITSI_WATERMARK: false/' /defaults/interface_config.js &&
+              sed -i "s/APP_NAME: 'Jitsi Meet'/APP_NAME: 'Taskade Call'/" /defaults/interface_config.js &&
+              sed -i "s/PROVIDER: 'Jitsi'/PROVIDER: 'Taskade'/" /defaults/interface_config.js &&
+              sed -i "s/JITSI_WATERMARK_LINK: 'https:\/\/jitsi.org'/JITSI_WATERMARK_LINK: 'https:\/\/www.taskade.com'/" /defaults/interface_config.js &&
+              sed -i "s/MOBILE_APP_PROMO: true/MOBILE_APP_PROMO: false/" /defaults/interface_config.js &&
+              sed -i 's/Jitsi Meet/Taskade Call/g' /usr/share/jitsi-meet/libs/app.bundle.min.js &&
+              sed -i "s/welcome{background-image:linear-gradient(-90deg,#1251ae 0,#0074ff 50%,#1251ae 100%)/welcome{background-image:linear-gradient(-90deg,#e52856 0,#FF2D60 50%,#e52856 100%)/" /usr/share/jitsi-meet/css/all.css &&
+              sed -i 's/0074e0/FF2D60/gi' /usr/share/jitsi-meet/css/all.css &&
+              sed -i 's/75a7e7/ffd5df/gi' /usr/share/jitsi-meet/css/all.css &&
+              echo -n ".leftwatermark{display: none;}.welcome-footer-padded{display: none;}.subject-text{display: none;}" >> /usr/share/jitsi-meet/css/all.css &&
+              /init
           envFrom:
           - configMapRef:
               name: {{ include "jitsi-meet.web.fullname" . }}
