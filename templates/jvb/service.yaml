@@ -24,6 +24,11 @@ spec:
       {{- end }}
       protocol: TCP
       name: rtp-tcp
+    - port: 80
+      targetPort: httpd
+      nodePort: 30080
+      protocol: TCP
+      name: httpd-tcp
     {{- end }}
   {{- with .Values.jvb.service.externalIPs }}
   externalIPs:

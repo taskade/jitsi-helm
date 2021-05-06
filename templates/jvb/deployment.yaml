@@ -19,6 +19,8 @@ spec:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/jvb/configmap.yaml") . | sha256sum }}
         checksum/secret: {{ include (print $.Template.BasePath "/jvb/xmpp-secret.yaml") . | sha256sum }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9888"
       {{- range $annotation, $value := mergeOverwrite .Values.global.podAnnotations .Values.jvb.podAnnotations }}
         {{ $annotation }}: {{ $value }}
       {{- end }}
@@ -36,6 +38,12 @@ spec:
             {{- toYaml .Values.jvb.securityContext | nindent 12 }}
           image: "{{ .Values.jvb.image.repository }}:{{ default .Chart.AppVersion .Values.jvb.image.tag }}"
           imagePullPolicy: {{ pluck "pullPolicy" .Values.jvb.image .Values.image | first }}
+          command: [
+            "bash",
+            "-c",
+            "echo $'org.jitsi.videobridge.rest.jetty.cors.allowedOrigins=localhost:8080,call.taskade.dev' >> /defaults/sip-communicator.properties && \
+              /init"
+            ]
           envFrom:
           - secretRef:
               name: {{ include "call-nested" (list . "prosody" "prosody.fullname") }}-jvb
@@ -69,6 +77,9 @@ spec:
               {{- end }}
               protocol: TCP
           {{- end }}
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
           {{- with .Values.jvb.livenessProbe }}
           livenessProbe:
           {{- toYaml . | nindent 12 }}
@@ -79,6 +90,19 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.jvb.resources | nindent 12 }}
+        - name: httpd
+          image: httpd:2.4.43-alpine
+          ports:
+            - name: httpd
+              containerPort: 80
+              hostPort: 30080
+              protocol: TCP
+        - name: exporter
+          image: systemli/prometheus-jitsi-meet-exporter:1.1.5
+          args: ["-videobridge-url", "http://localhost:8080/colibri/stats"]
+          ports:
+            - name: metrics
+              containerPort: 9888
 
       {{- with .Values.jvb.nodeSelector }}
       nodeSelector:
