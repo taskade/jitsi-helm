@@ -57,10 +57,12 @@ web:
     httpGet:
       path: /
       port: http
+    timeoutSeconds: 3
   readinessProbe:
     httpGet:
       path: /
       port: http
+    timeoutSeconds: 3
 
   podLabels: {}
   podAnnotations: {}
@@ -108,9 +110,11 @@ jicofo:
   livenessProbe:
     tcpSocket:
       port: 8888
+    timeoutSeconds: 3
   readinessProbe:
     tcpSocket:
       port: 8888
+    timeoutSeconds: 3
 
   podLabels: {}
   podAnnotations: {}
@@ -151,11 +155,13 @@ jvb:
       command:
       - pgrep
       - java
+    timeoutSeconds: 3
   readinessProbe:
     exec:
       command:
       - pgrep
       - java
+    timeoutSeconds: 3
 
   podLabels: {}
   podAnnotations: {}
