@@ -22,7 +22,7 @@ web:
   replicaCount: 1
   image:
     repository: jitsi/web
-    tag: stable-5765-1
+    tag: stable-6726
 
   extraEnvs: {}
   service:
@@ -100,7 +100,7 @@ jicofo:
   replicaCount: 1
   image:
     repository: jitsi/jicofo
-    tag: stable-5765-1
+    tag: stable-6726
 
   xmpp:
     user: focus
@@ -151,17 +151,13 @@ jvb:
   breweryMuc: jvbbrewery
 
   livenessProbe:
-    exec:
-      command:
-      - pgrep
-      - java
-    timeoutSeconds: 3
+    httpGet:
+      path: /about/health
+      port: 8080
   readinessProbe:
-    exec:
-      command:
-      - pgrep
-      - java
-    timeoutSeconds: 3
+    httpGet:
+      path: /about/health
+      port: 8080
 
   podLabels: {}
   podAnnotations: {}
@@ -187,7 +183,7 @@ serviceAccount:
   name:
 
 xmpp:
-  domain:
+  domain: jitsi.svc.cluster.local
   authDomain:
   mucDomain:
   internalMucDomain:
@@ -197,7 +193,7 @@ extraCommonEnvs: {}
 
 prosody:
   enabled: true
-  server:
+  server: jitsi-prosody.jitsi.svc.cluster.local
   extraEnvFrom:
   - secretRef:
       name: '{{ include "prosody.fullname" . }}-jicofo'
@@ -207,6 +203,6 @@ prosody:
       name: '{{ include "prosody.fullname" . }}-common'
   image:
     repository: jitsi/prosody
-    tag: stable-5765-1
+    tag: stable-6726
   nodeSelector:
     eks.amazonaws.com/nodegroup: taskade-dev-node-group-20200605-jitsi-m5-large
