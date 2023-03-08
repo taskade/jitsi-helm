@@ -18,11 +18,19 @@ tz: UTC
 image:
   pullPolicy: IfNotPresent
 
+websockets:
+  ## Colibri (JVB signalling):
+  colibri:
+    enabled: true
+  ## XMPP (Prosody signalling):
+  xmpp:
+    enabled: true
+
 web:
   replicaCount: 1
   image:
     repository: jitsi/web
-    tag: stable-6726
+    tag: stable-8252
 
   extraEnvs: {}
   service:
@@ -56,12 +64,12 @@ web:
   livenessProbe:
     httpGet:
       path: /
-      port: http
+      port: 80
     timeoutSeconds: 3
   readinessProbe:
     httpGet:
       path: /
-      port: http
+      port: 80
     timeoutSeconds: 3
 
   podLabels: {}
@@ -100,7 +108,7 @@ jicofo:
   replicaCount: 1
   image:
     repository: jitsi/jicofo
-    tag: stable-6726
+    tag: stable-8252
 
   xmpp:
     user: focus
@@ -131,7 +139,7 @@ jvb:
   replicaCount: 1
   image:
     repository: jitsi/jvb
-    tag: stable-5765-1
+    tag: stable-8252
 
   xmpp:
     user: jvb
@@ -142,7 +150,8 @@ jvb:
   enableTCP: true
   UDPPort: 30030
   TCPPort: 30443
-  publicIP: jvb-staging-b1639615a9319053.elb.us-east-1.amazonaws.com
+  publicIPs:
+    - jvb-staging-b1639615a9319053.elb.us-east-1.amazonaws.com
   service:
     enabled:
     type: NodePort
@@ -172,6 +181,29 @@ jvb:
     JVB_STUN_SERVERS: "stun.l.google.com:19302,stun1.l.google.com:19302,stun2.l.google.com:19302"
     JVB_ENABLE_APIS: "rest,colibri"
     ENABLE_STATISTICS: "true"
+  metrics:
+    enabled: true
+    prometheusAnnotations: true
+    # image:
+      # repository: docker.io/systemli/prometheus-jitsi-meet-exporter
+      # tag: 1.2.1
+      # pullPolicy: IfNotPresent
+    # serviceMonitor:
+      # enabled: false
+      # selector:
+        # release: prometheus-operator
+      # interval: 10s
+      # # honorLabels: false
+    # resources:
+      # requests:
+        # cpu: 10m
+        # memory: 16Mi
+      # limits:
+        # cpu: 20m
+        # memory: 32Mi
+
+octo:
+  enabled: false
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -190,6 +222,13 @@ xmpp:
   guestDomain:
 
 extraCommonEnvs: {}
+  # XMPP_CROSS_DOMAIN: "true"
+  # ENABLE_LETSENCRYPT: "1"
+  # LETSENCRYPT_DOMAIN: "call.taskade.dev"
+  # LETSENCRYPT_EMAIL: "yc@taskade.com"
+
+  # JVB_WS_SERVER_ID: "jitsi-prosody.jitsi.svc"
+  # ENABLE_COLIBRI_WEBSOCKET: "0"
 
 prosody:
   enabled: true
@@ -203,6 +242,6 @@ prosody:
       name: '{{ include "prosody.fullname" . }}-common'
   image:
     repository: jitsi/prosody
-    tag: stable-6726
+    tag: stable-8252
   nodeSelector:
     eks.amazonaws.com/nodegroup: taskade-dev-node-group-20200605-jitsi-m5-large
