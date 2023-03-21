@@ -18,11 +18,19 @@ tz: UTC
 image:
   pullPolicy: IfNotPresent
 
+websockets:
+  ## Colibri (JVB signalling):
+  colibri:
+    enabled: true
+  ## XMPP (Prosody signalling):
+  xmpp:
+    enabled: true
+
 web:
   replicaCount: 1
   image:
     repository: jitsi/web
-    tag: stable-5765-1
+    tag: stable-8252
 
   extraEnvs: {}
   service:
@@ -54,23 +62,17 @@ web:
   httpsEnabled: false
 
   livenessProbe:
-    failureThreshold: 6
-    initialDelaySeconds: 60
-    periodSeconds: 10
-    successThreshold: 1
-    timeoutSeconds: 3
     httpGet:
       path: /
-      port: http
+      port: 80
+    timeoutSeconds: 3
+    initialDelaySeconds: 60
   readinessProbe:
-    failureThreshold: 6
-    initialDelaySeconds: 60
-    periodSeconds: 10
-    successThreshold: 1
-    timeoutSeconds: 3
     httpGet:
       path: /
-      port: http
+      port: 80
+    timeoutSeconds: 3
+    initialDelaySeconds: 60
 
   podLabels: {}
   podAnnotations: {}
@@ -108,7 +110,7 @@ jicofo:
   replicaCount: 1
   image:
     repository: jitsi/jicofo
-    tag: stable-5765-1
+    tag: stable-8252
 
   xmpp:
     user: focus
@@ -145,7 +147,7 @@ jvb:
   replicaCount: 1
   image:
     repository: jitsi/jvb
-    tag: stable-5765-1
+    tag: stable-8252
 
   xmpp:
     user: jvb
@@ -156,7 +158,8 @@ jvb:
   enableTCP: true
   UDPPort: 30030
   TCPPort: 30443
-  publicIP: jvb-prod-e42b6c355ea5eb98.elb.us-east-1.amazonaws.com
+  publicIPs:
+    - jvb-prod-e42b6c355ea5eb98.elb.us-east-1.amazonaws.com
   service:
     enabled:
     type: NodePort
@@ -165,17 +168,13 @@ jvb:
   breweryMuc: jvbbrewery
 
   livenessProbe:
-    exec:
-      command:
-      - pgrep
-      - java
-    timeoutSeconds: 3
+    httpGet:
+      path: /about/health
+      port: 8080
   readinessProbe:
-    exec:
-      command:
-      - pgrep
-      - java
-    timeoutSeconds: 3
+    httpGet:
+      path: /about/health
+      port: 8080
 
   podLabels: {}
   podAnnotations: {}
@@ -197,6 +196,9 @@ jvb:
     JVB_ENABLE_APIS: "rest,colibri"
     ENABLE_STATISTICS: "true"
 
+octo:
+  enabled: false
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
@@ -207,7 +209,7 @@ serviceAccount:
   name:
 
 xmpp:
-  domain:
+  domain: jitsi.svc.cluster.local
   authDomain:
   mucDomain:
   internalMucDomain:
@@ -217,7 +219,7 @@ extraCommonEnvs: {}
 
 prosody:
   enabled: true
-  server:
+  server: jitsi-prosody.jitsi.svc.cluster.local
   extraEnvFrom:
   - secretRef:
       name: '{{ include "prosody.fullname" . }}-jicofo'
@@ -227,7 +229,7 @@ prosody:
       name: '{{ include "prosody.fullname" . }}-common'
   image:
     repository: jitsi/prosody
-    tag: stable-5765-1
+    tag: stable-8252
   nodeSelector:
     eks.amazonaws.com/nodegroup: taskade-prod-node-group-20200615-jitsi-m5-large
   resources:
