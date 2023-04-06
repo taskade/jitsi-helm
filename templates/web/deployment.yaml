@@ -45,7 +45,7 @@ spec:
             - |-
               apt-get update &&
               apt-get install -y curl &&
-              curl https://i.imgur.com/UtxfXcd.png -o /usr/share/jitsi-meet/images/watermark.png &&
+              curl https://taskade-files.s3.amazonaws.com/jitsi/logo.svg -o /usr/share/jitsi-meet/images/watermark.svg &&
               curl https://taskade-files.s3.amazonaws.com/jitsi/favicon.ico -o /usr/share/jitsi-meet/images/favicon.ico &&
               # sed -i ':a;N;$!ba;s/location = \/http-bind {\n/location = \/http-bind {\n  set $cors \"https:\/\/meet\.jit\.si\";\n  if ($http_origin ~* (\\.taskade\\.com|\\.taskade\\.dev|localhost:8080)) {\n      set $cors \"$http_origin\";\n  }\n\n  proxy_hide_header 'Access-Control-Allow-Origin'\n;  add_header Access-Control-Allow-Origin \"$cors\";\n/gi' /defaults/meet.conf &&
               sed -i 's/SHOW_WATERMARK_FOR_GUESTS: true/SHOW_WATERMARK_FOR_GUESTS: false/' /defaults/interface_config.js &&
